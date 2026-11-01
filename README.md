@@ -14,7 +14,7 @@ v `har-hmdb51/har/config.py` (`CLASSES`); zvyšok kódu ich preberá odtiaľ.
 | CNN-SVM | ResNet18 (ImageNet), 512 na snímku | priemer cez 16 snímok |
 | CNN-LSTM | ResNet18 (ImageNet), 512 na snímku | LSTM číta snímky postupne |
 | R(2+1)D + SVM | video sieť R(2+1)D-18 (Kinetics-400), 512 na klip | 3D konvolúcie v sieti |
-| R(2+1)D + LSTM | R(2+1)D-18, 4 úseky po 8 snímok → (4, 512) na klip | 3D konvolúcie + LSTM cez úseky |
+| R(2+1)D + LSTM | R(2+1)D-18, 4 úseky po 8 snímok  (4, 512) na klip | 3D konvolúcie + LSTM cez úseky |
 | R(2+1)D doladená | tá istá sieť, posledný blok (`layer4`) dotrénovaný | 3D konvolúcie v sieti |
 
 ## Štruktúra
@@ -52,9 +52,9 @@ Príkazy sa spúšťajú v priečinku `har-hmdb51/`, pre každú triedu z `CLASS
 sudo apt install unrar
 wget -c "https://huggingface.co/datasets/Serrelab/hmdb51/resolve/main/hmdb51_org.rar"
 unrar x hmdb51_org.rar eat.rar clap.rar      # z veľkého archívu len potrebné triedy
-unrar x eat.rar videos/                      # -> videos/eat/*.avi
-unrar x clap.rar videos/                     # -> videos/clap/*.avi
-python convert_hmdb_videos.py                # -> HMDB51/<trieda>/<klip>/<snímka>.jpg
+unrar x eat.rar videos/                      # videos/eat/*.avi
+unrar x clap.rar videos/                     #  videos/clap/*.avi
+python convert_hmdb_videos.py                #  HMDB51/<trieda>/<klip>/<snímka>.jpg
 ```
 
 Aktuálne dáta: 238 klipov (`clap` 130, `eat` 108) z 90 filmov.
@@ -108,7 +108,7 @@ python 08_camera.py --source video.mp4 --out vystup.mp4 --no-window
 | LSTM | architektúra | 1 vrstva, 128 neurónov, dropout 0,5 |
 | | trénovanie | Adam, lr 1e-3, weight decay 1e-4, dávka 32, 40 epoch |
 | | validácia | 20 % filmov z trénovacích dát, early stopping podľa validačnej straty |
-| | vstup 06c | 32 snímok → 4 úseky po 8 → (4, 512) |
+| | vstup 06c | 32 snímok  4 úseky po 8 (4, 512) |
 | Doladenie | trénované vrstvy | `layer4` + nová výstupná vrstva (dropout 0,5) |
 | | trénovanie | Adam, lr 1e-5, weight decay 1e-4, dávka 4, 8 epoch, float16 na GPU |
 | | ďalšie | zrkadlové otočenie (augmentácia), BatchNorm v režime inferencie, early stopping |
@@ -144,18 +144,6 @@ Pôvodné videá HMDB51, priemer cez 10 delení.
 | R(2+1)D + SVM | **0,80 ± 0,02** | **0,78** | **0,94** |
 | R(2+1)D doladená | 0,76 ± 0,04 | – | – |
 
-Pozorovania:
-
-- **Video sieť je najlepšia vo všetkých dvojiciach.** R(2+1)D je predtrénovaná na videách (Kinetics-400),
-  takže jej príznaky už obsahujú pohyb. ResNet18 vidí len jednotlivé obrázky, a priemer ani LSTM
-  nad nimi túto informáciu nedoplnia.
-- **eat / drink je ťažká dvojica.** Obe činnosti vyzerajú podobne (ruka ide k ústam), líšia sa
-  hlavne malým predmetom v ruke. Výsledok ~0,80 zodpovedá bežným hodnotám pre túto úlohu.
-- **clap / wave** je tiež pohybovo podobná dvojica (ruky pred telom), preto výsledky sú podobné.
-- **eat / clap** sú vizuálne odlišné činnosti a všetky modely dosahujú výrazne viac.
-  Ukazuje to, že pipeline funguje správne a obmedzením je podobnosť tried, nie kód.
-- Rozšírenie trénovacích dát o videá z Charades výsledok na HMDB51 nezlepšilo (iné prostredie a štýl záberov),
-  preto sa v konečnej verzii nepoužíva.
 
 Rozdiely medzi verziami:
 
